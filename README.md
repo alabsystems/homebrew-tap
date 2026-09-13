@@ -24,18 +24,32 @@ so Homebrew won't fight it: `brew upgrade` skips aterm by default (use
 
 ## How this tap stays current
 
-`.github/workflows/bump.yml` runs every 6 hours (and on manual dispatch). It:
+`pub tap`, run by a person from the publication engine. There is deliberately
+**no GitHub Actions workflow** here — no `.github/`, nothing scheduled, nothing
+on GitHub.
 
-1. queries the `alabsystems/aterm` releases API anonymously,
-2. picks the numerically greatest tag matching `^v[0-9]+\.[0-9]+\.0$` whose
-   assets include both `aterm-VERSION-mac.zip` and `aterm-appcast.toml`
-   (`atpkg-index-*` releases and the unreliable `latest` pointer are ignored),
-3. verifies the appcast's `zip_sha256` against a fresh hash of the downloaded
-   zip (the run fails on mismatch),
-4. rewrites `version` and `sha256` in `Casks/aterm.rb` AND `Casks/alab.rb`
-   (both pin the same zip) and commits to `main`.
+```sh
+pub tap          # what this tap serves vs the newest eligible aterm release
+pub tap --bump   # verify, rewrite both casks, push
+```
 
-## Manual bump (when automation is down)
+`--bump` refuses unless THREE independent sources agree on the zip's sha256:
+`zip_sha256` in the release's `aterm-appcast.toml`, the
+`aterm-VERSION-mac.zip.sha256` sidecar, and `shasum -a 256` of the zip it
+actually downloaded. It selects the numerically greatest tag matching
+`^v[0-9]+\.[0-9]+\.0$` whose assets include both `aterm-VERSION-mac.zip` and
+`aterm-appcast.toml` (`atpkg-index-*` releases and the unreliable `latest`
+pointer are never selected), and rewrites `version` and `sha256` in
+`Casks/aterm.rb` AND `Casks/alab.rb` together, since both pin the same zip.
+
+A cask whose `sha256` does not match the artifact tells every `brew install`
+that the download was corrupted, so a mismatch is a refusal, not a warning.
+
+If this tap ever looks stale, run `pub tap`: it exits non-zero and says how far
+behind the casks are. That check has to be RUN — a tap is just files, so a stale
+one looks exactly like a current one.
+
+## Manual bump (when `pub tap` is unavailable)
 
 ```sh
 curl -fsSLO https://github.com/alabsystems/aterm/releases/download/vNEW/aterm-NEW-mac.zip
