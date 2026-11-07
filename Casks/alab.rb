@@ -1,6 +1,6 @@
 cask "alab" do
-  version "0.160.0"
-  sha256 "5fc148751a88c746a332cd31863061f5d0d8bb4c09cdeed883e0d0e113a5bb28"
+  version "0.161.0"
+  sha256 "58c23b36625743c8fd25fcc67a101f30e27a626f9f418abbad4cb21551e7725a"
 
   url "https://github.com/alabsystems/aterm/releases/download/v#{version}/aterm-#{version}-mac.zip"
   name "ALab"
